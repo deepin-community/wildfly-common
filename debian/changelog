@@ -1,0 +1,68 @@
+wildfly-common (1.5.4-1) unstable; urgency=medium
+
+  * New upstream version 1.5.4.
+
+ -- Markus Koschany <apo@debian.org>  Wed, 11 Mar 2020 13:47:09 +0100
+
+wildfly-common (1.5.3-1) unstable; urgency=medium
+
+  * New upstream version 1.5.3.
+  * Improve the watch file.
+  * Declare compliance with Debian Policy 4.5.0.
+
+ -- Markus Koschany <apo@debian.org>  Tue, 04 Feb 2020 01:33:27 +0100
+
+wildfly-common (1.5.2-1) unstable; urgency=medium
+
+  * New upstream version 1.5.2.
+  * Switch to debhelper-compat 12.
+  * Declare compliance with Debian Policy 4.4.0.
+  * Add remove-Substitutions.java.patch and work around a FTBFS.
+
+ -- Markus Koschany <apo@debian.org>  Thu, 18 Jul 2019 16:41:26 +0200
+
+wildfly-common (1.4.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * Depend on libgeronimo-annotation-1.3-spec-java instead of libtomcat8-java
+  * Standards-Version updated to 4.2.1
+  * Use salsa.debian.org Vcs-* URLs
+
+ -- Emmanuel Bourg <ebourg@apache.org>  Mon, 03 Dec 2018 22:14:57 +0100
+
+wildfly-common (1.4.0-1) unstable; urgency=medium
+
+  * New upstream version 1.4.0.
+
+ -- Markus Koschany <apo@debian.org>  Tue, 15 May 2018 14:53:05 +0200
+
+wildfly-common (1.3.2-1) unstable; urgency=medium
+
+  * New upstream version 1.3.2.
+  * Declare compliance with Debian Policy 4.1.4.
+
+ -- Markus Koschany <apo@debian.org>  Fri, 04 May 2018 12:41:16 +0200
+
+wildfly-common (1.3.1-1) unstable; urgency=medium
+
+  * New upstream version 1.3.1.
+    - Fix FTBFS with Java 9. (Closes: #893536)
+  * Build-depend on libmaven-enforcer-plugin-java.
+  * Build-depend on libtomcat8-java which also provides the
+    javax-annotation-api.
+
+ -- Markus Koschany <apo@debian.org>  Mon, 19 Mar 2018 23:01:33 +0100
+
+wildfly-common (1.3.0-1) unstable; urgency=medium
+
+  * New upstream version 1.3.0.
+  * Switch to compat level 11.
+  * Declare compliance with Debian Policy 4.1.3.
+
+ -- Markus Koschany <apo@debian.org>  Mon, 15 Jan 2018 18:41:49 +0100
+
+wildfly-common (1.2.0-1) unstable; urgency=medium
+
+  * Initial release (Closes: #872732)
+
+ -- Markus Koschany <apo@debian.org>  Mon, 21 Aug 2017 18:36:09 +0200

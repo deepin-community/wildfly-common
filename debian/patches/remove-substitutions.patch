@@ -1,0 +1,373 @@
+From: Markus Koschany <apo@debian.org>
+Date: Wed, 11 Mar 2020 13:50:40 +0100
+Subject: remove substitutions
+
+---
+ .../java/org/wildfly/common/Substitutions.java     |  80 -------------
+ .../org/wildfly/common/lock/Substitutions.java     |  39 -------
+ .../java/org/wildfly/common/net/Substitutions.java | 124 ---------------------
+ .../java/org/wildfly/common/os/Substitutions.java  |  53 ---------
+ .../org/wildfly/common/lock/Substitutions.java     |  30 -----
+ 5 files changed, 326 deletions(-)
+ delete mode 100644 src/main/java/org/wildfly/common/Substitutions.java
+ delete mode 100644 src/main/java/org/wildfly/common/lock/Substitutions.java
+ delete mode 100644 src/main/java/org/wildfly/common/net/Substitutions.java
+ delete mode 100644 src/main/java/org/wildfly/common/os/Substitutions.java
+ delete mode 100644 src/main/java9/org/wildfly/common/lock/Substitutions.java
+
+diff --git a/src/main/java/org/wildfly/common/Substitutions.java b/src/main/java/org/wildfly/common/Substitutions.java
+deleted file mode 100644
+index 2ffc322..0000000
+--- a/src/main/java/org/wildfly/common/Substitutions.java
++++ /dev/null
+@@ -1,80 +0,0 @@
+-/*
+- * JBoss, Home of Professional Open Source.
+- * Copyright 2018 Red Hat, Inc., and individual contributors
+- * as indicated by the @author tags.
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package org.wildfly.common;
+-
+-import com.oracle.svm.core.annotate.Alias;
+-import com.oracle.svm.core.annotate.AlwaysInline;
+-import com.oracle.svm.core.annotate.Substitute;
+-import com.oracle.svm.core.annotate.TargetClass;
+-
+-/**
+- */
+-final class Substitutions {
+-    @TargetClass(Branch.class)
+-    static final class Target_Branch {
+-        @AlwaysInline("Straight call to GraalVM")
+-        @Substitute
+-        public static boolean veryLikely(boolean expr) {
+-            return Target_GraalDirectives.injectBranchProbability(Target_GraalDirectives.FASTPATH_PROBABILITY, expr);
+-        }
+-
+-        @AlwaysInline("Straight call to GraalVM")
+-        @Substitute
+-        public static boolean veryUnlikely(boolean expr) {
+-            return Target_GraalDirectives.injectBranchProbability(Target_GraalDirectives.SLOWPATH_PROBABILITY, expr);
+-        }
+-
+-        @AlwaysInline("Straight call to GraalVM")
+-        @Substitute
+-        public static boolean likely(boolean expr) {
+-            return Target_GraalDirectives.injectBranchProbability(Target_GraalDirectives.LIKELY_PROBABILITY, expr);
+-        }
+-
+-        @AlwaysInline("Straight call to GraalVM")
+-        @Substitute
+-        public static boolean unlikely(boolean expr) {
+-            return Target_GraalDirectives.injectBranchProbability(Target_GraalDirectives.UNLIKELY_PROBABILITY, expr);
+-        }
+-
+-        @AlwaysInline("Straight call to GraalVM")
+-        @Substitute
+-        public static boolean probability(float prob, boolean expr) {
+-            return Target_GraalDirectives.injectBranchProbability(prob, expr);
+-        }
+-    }
+-
+-    @TargetClass(className = "org.graalvm.compiler.api.directives.GraalDirectives")
+-    static final class Target_GraalDirectives {
+-        @Alias
+-        public static double LIKELY_PROBABILITY;
+-        @Alias
+-        public static double UNLIKELY_PROBABILITY;
+-
+-        @Alias
+-        public static double SLOWPATH_PROBABILITY;
+-        @Alias
+-        public static double FASTPATH_PROBABILITY;
+-
+-        @Alias
+-        public static boolean injectBranchProbability(double probability, boolean condition) {
+-            assert probability >= 0.0 && probability <= 1.0;
+-            return condition;
+-        }
+-    }
+-}
+diff --git a/src/main/java/org/wildfly/common/lock/Substitutions.java b/src/main/java/org/wildfly/common/lock/Substitutions.java
+deleted file mode 100644
+index a7a5b1f..0000000
+--- a/src/main/java/org/wildfly/common/lock/Substitutions.java
++++ /dev/null
+@@ -1,39 +0,0 @@
+-/*
+- * JBoss, Home of Professional Open Source.
+- * Copyright 2018 Red Hat, Inc., and individual contributors
+- * as indicated by the @author tags.
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package org.wildfly.common.lock;
+-
+-import com.oracle.svm.core.annotate.Alias;
+-import com.oracle.svm.core.annotate.Substitute;
+-import com.oracle.svm.core.annotate.TargetClass;
+-
+-final class Substitutions {
+-    @TargetClass(JDKSpecific.class)
+-    static final class Target_JDKSpecific {
+-        @Substitute
+-        static void onSpinWait() {
+-            Target_PauseNode.pause();
+-        }
+-    }
+-
+-    @TargetClass(className = "org.graalvm.compiler.nodes.PauseNode")
+-    static final class Target_PauseNode {
+-        @Alias
+-        public static native void pause();
+-    }
+-}
+diff --git a/src/main/java/org/wildfly/common/net/Substitutions.java b/src/main/java/org/wildfly/common/net/Substitutions.java
+deleted file mode 100644
+index f9a826a..0000000
+--- a/src/main/java/org/wildfly/common/net/Substitutions.java
++++ /dev/null
+@@ -1,124 +0,0 @@
+-/*
+- * JBoss, Home of Professional Open Source.
+- * Copyright 2018 Red Hat, Inc., and individual contributors
+- * as indicated by the @author tags.
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package org.wildfly.common.net;
+-
+-import java.net.UnknownHostException;
+-import java.util.Collections;
+-import java.util.List;
+-
+-import com.oracle.svm.core.annotate.Substitute;
+-import com.oracle.svm.core.annotate.TargetClass;
+-import org.graalvm.nativeimage.Platform;
+-import org.graalvm.nativeimage.Platforms;
+-import org.graalvm.nativeimage.StackValue;
+-import org.graalvm.nativeimage.c.CContext;
+-import org.graalvm.nativeimage.c.function.CFunction;
+-import org.graalvm.nativeimage.c.type.CCharPointer;
+-import org.graalvm.nativeimage.c.type.CTypeConversion;
+-import org.graalvm.word.UnsignedWord;
+-import org.graalvm.word.WordFactory;
+-
+-/**
+- */
+-final class Substitutions {
+-    @TargetClass(className = "org.wildfly.common.net.GetHostInfoAction")
+-    @Platforms({Platform.DARWIN.class, Platform.LINUX.class})
+-    static final class Target_org_wildfly_common_net_GetHostInfoAction {
+-        @Substitute
+-        public String[] run() {
+-            // still allow host name to be overridden
+-            String qualifiedHostName = System.getProperty("jboss.qualified.host.name");
+-            String providedHostName = System.getProperty("jboss.host.name");
+-            String providedNodeName = System.getProperty("jboss.node.name");
+-            if (qualifiedHostName == null) {
+-                // if host name is specified, don't pick a qualified host name that isn't related to it
+-                qualifiedHostName = providedHostName;
+-                if (qualifiedHostName == null) {
+-                    // query the operating system
+-                    CCharPointer nameBuf = StackValue.get(ProcessSubstitutions.SIZE); // should be more than enough
+-                    int res = NativeInfo.gethostname(nameBuf, WordFactory.unsigned(ProcessSubstitutions.SIZE));
+-                    if (res != -1 && res > 0) {
+-                        if (res == ProcessSubstitutions.SIZE) {
+-                            // null-terminate a really long name
+-                            nameBuf.write(ProcessSubstitutions.SIZE - 1, (byte) 0);
+-                        }
+-                        qualifiedHostName = CTypeConversion.toJavaString(nameBuf);
+-                    }
+-                }
+-                if (qualifiedHostName == null) {
+-                    // POSIX-like OSes including Mac should have this set
+-                    qualifiedHostName = System.getenv("HOSTNAME");
+-                }
+-                if (qualifiedHostName == null) {
+-                    // Certain versions of Windows
+-                    qualifiedHostName = System.getenv("COMPUTERNAME");
+-                }
+-                if (qualifiedHostName == null) {
+-                    try {
+-                        qualifiedHostName = HostName.getLocalHost().getHostName();
+-                    } catch (UnknownHostException e) {
+-                        qualifiedHostName = null;
+-                    }
+-                }
+-                if (qualifiedHostName != null && (Inet.isInet4Address(qualifiedHostName) || Inet.isInet6Address(qualifiedHostName))) {
+-                    // IP address is not acceptable
+-                    qualifiedHostName = null;
+-                }
+-                if (qualifiedHostName == null) {
+-                    // Give up
+-                    qualifiedHostName = "unknown-host.unknown-domain";
+-                } else {
+-                    qualifiedHostName = qualifiedHostName.trim().toLowerCase();
+-                }
+-            }
+-            if (providedHostName == null) {
+-                // Use the host part of the qualified host name
+-                final int idx = qualifiedHostName.indexOf('.');
+-                providedHostName = idx == - 1 ? qualifiedHostName : qualifiedHostName.substring(0, idx);
+-            }
+-            if (providedNodeName == null) {
+-                providedNodeName = providedHostName;
+-            }
+-            return new String[] {
+-                providedHostName,
+-                qualifiedHostName,
+-                providedNodeName
+-            };
+-
+-        }
+-    }
+-
+-    @CContext(NativeInfoDirectives.class)
+-    @Platforms({Platform.DARWIN.class, Platform.LINUX.class})
+-    static final class NativeInfo {
+-        @CFunction
+-        static native int gethostname(CCharPointer nameBuf, UnsignedWord /* size_t */ len);
+-    }
+-
+-    static final class NativeInfoDirectives implements CContext.Directives {
+-        public List<String> getHeaderFiles() {
+-            return Collections.singletonList("<unistd.h>");
+-        }
+-    }
+-
+-    static final class ProcessSubstitutions {
+-        static final int SIZE = 512;
+-    }
+-
+-}
+diff --git a/src/main/java/org/wildfly/common/os/Substitutions.java b/src/main/java/org/wildfly/common/os/Substitutions.java
+deleted file mode 100644
+index 9172245..0000000
+--- a/src/main/java/org/wildfly/common/os/Substitutions.java
++++ /dev/null
+@@ -1,53 +0,0 @@
+-/*
+- * JBoss, Home of Professional Open Source.
+- * Copyright 2018 Red Hat, Inc., and individual contributors
+- * as indicated by the @author tags.
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package org.wildfly.common.os;
+-
+-import java.io.File;
+-
+-import com.oracle.svm.core.annotate.Substitute;
+-import com.oracle.svm.core.annotate.TargetClass;
+-import org.graalvm.nativeimage.ProcessProperties;
+-
+-final class Substitutions {
+-
+-    @TargetClass(className = "org.wildfly.common.os.GetProcessInfoAction")
+-    static final class Target_org_wildfly_common_os_GetProcessInfoAction {
+-        @Substitute
+-        public Object[] run() {
+-            return new Object[] { Long.valueOf(ProcessProperties.getProcessID() & 0xffff_ffffL), ProcessUtils.getProcessName() };
+-        }
+-    }
+-
+-    static final class ProcessUtils {
+-       static String getProcessName() {
+-           String name = System.getProperty("jboss.process.name");
+-           if (name == null) {
+-               String exeName = ProcessProperties.getExecutableName();
+-               if (! exeName.isEmpty()) {
+-                   int idx = exeName.lastIndexOf(File.separatorChar);
+-                   name = idx == -1 ? exeName : idx == exeName.length() - 1 ? null : exeName.substring(idx + 1);
+-               }
+-           }
+-           if (name == null) {
+-               name = "<unknown>";
+-           }
+-           return name;
+-       }
+-   }
+-}
+diff --git a/src/main/java9/org/wildfly/common/lock/Substitutions.java b/src/main/java9/org/wildfly/common/lock/Substitutions.java
+deleted file mode 100644
+index 6151f75..0000000
+--- a/src/main/java9/org/wildfly/common/lock/Substitutions.java
++++ /dev/null
+@@ -1,30 +0,0 @@
+-/*
+- * JBoss, Home of Professional Open Source.
+- * Copyright 2018 Red Hat, Inc., and individual contributors
+- * as indicated by the @author tags.
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *     http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package org.wildfly.common.lock;
+-
+-final class Substitutions {
+-    static final class Target_JDKSpecific {
+-        static void onSpinWait() {
+-        }
+-    }
+-
+-    static final class Target_PauseNode {
+-        public static native void pause();
+-    }
+-}

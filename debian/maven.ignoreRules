@@ -1,0 +1,6 @@
+
+org.apache.maven.plugins maven-javadoc-plugin * * * *
+org.apache.maven.plugins maven-dependency-plugin * * * *
+org.wildfly.common wildfly-common-jdk9-supplement * * * *
+org.graalvm.sdk graal-sdk * * * *
+com.oracle.substratevm svm * * * *
